@@ -1,4 +1,4 @@
-import { Client } from "discord.js";
+import type { Client } from 'discord.js';
 
 export interface ToolResponse {
   content: { type: string; text: string }[];
@@ -10,4 +10,8 @@ export interface ToolContext {
   client: Client;
 }
 
-export type ToolHandler<T = any> = (args: T, context: ToolContext) => Promise<ToolResponse>; 
+// biome-ignore lint/suspicious/noExplicitAny: <>
+export type ToolHandler<T = any> = (
+  args: T,
+  context: ToolContext
+) => Promise<ToolResponse>;

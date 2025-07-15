@@ -1,67 +1,39 @@
-import { Client } from "discord.js";
-import { z } from "zod";
-import { ToolResponse, ToolContext, ToolHandler } from "./types.js";
-import { loginHandler } from './login.js';
-import { sendMessageHandler } from './send-message.js';
-import { 
-  getForumChannelsHandler, 
-  createForumPostHandler, 
-  getForumPostHandler, 
-  replyToForumHandler,
-  deleteForumPostHandler
-} from './forum.js';
-import {
-  createTextChannelHandler,
-  deleteChannelHandler,
-  readMessagesHandler,
-  getServerInfoHandler,
-  createCategoryHandler,
-  editCategoryHandler,
-  deleteCategoryHandler
-} from './channel.js';
-import {
-  addReactionHandler,
-  addMultipleReactionsHandler,
-  removeReactionHandler,
-  deleteMessageHandler
-} from './reactions.js';
-import {
-  createWebhookHandler,
-  sendWebhookMessageHandler,
-  editWebhookHandler,
-  deleteWebhookHandler
-} from './webhooks.js';
-
-// Export tool handlers
 export {
-  loginHandler,
-  sendMessageHandler,
-  getForumChannelsHandler,
+  createCategoryHandler,
+  createTextChannelHandler,
+  deleteCategoryHandler,
+  deleteChannelHandler,
+  editCategoryHandler,
+  getServerInfoHandler,
+  readMessagesHandler,
+} from './channel.js';
+export {
   createForumPostHandler,
+  deleteForumPostHandler,
+  getForumChannelsHandler,
   getForumPostHandler,
   replyToForumHandler,
-  deleteForumPostHandler,
-  createTextChannelHandler,
-  deleteChannelHandler,
-  readMessagesHandler,
-  getServerInfoHandler,
-  addReactionHandler,
+} from './forum.js';
+export { loginHandler } from './login.js';
+export {
   addMultipleReactionsHandler,
-  removeReactionHandler,
+  addReactionHandler,
   deleteMessageHandler,
+  removeReactionHandler,
+} from './reactions.js';
+export { sendMessageHandler } from './send-message.js';
+export { ToolContext, ToolHandler, ToolResponse } from './types.js';
+export {
   createWebhookHandler,
-  sendWebhookMessageHandler,
-  editWebhookHandler,
   deleteWebhookHandler,
-  createCategoryHandler,
-  editCategoryHandler,
-  deleteCategoryHandler
-};
+  editWebhookHandler,
+  sendWebhookMessageHandler,
+} from './webhooks.js';
 
-// Export common types
-export { ToolResponse, ToolContext, ToolHandler };
+import type { Client } from 'discord.js';
+import type { ToolContext } from './types.js';
 
 // Create tool context
 export function createToolContext(client: Client): ToolContext {
   return { client };
-} 
+}

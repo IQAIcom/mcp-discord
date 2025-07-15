@@ -1,19 +1,23 @@
 {
-  "name": "mcp-discord",
-  "version": "1.3.4",
+  "name": "@iqai/mcp-discord",
+  "version": "0.0.1",
   "description": "Model Context Protocol (MCP) server for Discord integration, allowing Claude and other MCP clients to interact with Discord",
-  "main": "build/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "mcp-discord": "build/index.js"
+    "mcp-discord": "dist/index.js"
   },
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "start": "node build/index.js",
-    "dev": "node --loader ts-node/esm src/index.ts",
-    "test-api": "node test-api.js",
-    "prepublishOnly": "npm run build"
+    "build": "tsc && shx chmod +x dist/index.js",
+    "prepare": "husky",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "publish-packages": "pnpm run build && changeset publish",
+    "format": "biome format . --write",
+    "lint": "biome check ."
   },
   "keywords": [
     "mcp",
@@ -24,29 +28,32 @@
     "chatbot",
     "automation"
   ],
-  "author": "Barry Yip <barry99625@gmail.com>",
+  "author": "IQAI",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/barryyip0625/mcp-discord.git"
+    "url": "git+https://github.com/IQAICOM/mcp-discord.git"
   },
   "bugs": {
-    "url": "https://github.com/barryyip0625/mcp-discord/issues"
+    "url": "https://github.com/IQAICOM/mcp-discord/issues"
   },
-  "homepage": "https://github.com/barryyip0625/mcp-discord#readme",
-  "files": [
-    "build/",
-    "README.md",
-    "LICENSE"
-  ],
+  "homepage": "https://github.com/IQAICOM/mcp-discord#readme",
   "engines": {
     "node": ">=18.0.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
+    "@biomejs/biome": "^2.1.1",
+    "@changesets/cli": "^2.29.4",
     "@types/express": "^5.0.1",
-    "@types/node": "^20.17.50",
+    "@types/node": "^22.15.19",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "ultracite": "5.0.36"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.0",
@@ -54,5 +61,13 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "zod": "^3.25.13"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}": [
+      "biome check --write --organize-imports-enabled=false --no-errors-on-unmatched"
+    ],
+    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
+      "npx ultracite format"
+    ]
   }
 }
