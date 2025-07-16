@@ -4,8 +4,8 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import type { Client } from 'discord.js';
-import { z } from 'zod';
-import { info } from './logger.js';
+import { error, info } from './logger.js';
+import { SamplingHandler } from './sampling.js';
 import { toolList } from './tool-list.js';
 import {
   addMultipleReactionsHandler,
@@ -39,13 +39,19 @@ export class DiscordMCPServer {
   private server: Server;
   private toolContext: ReturnType<typeof createToolContext>;
   private clientStatusInterval: NodeJS.Timeout | null = null;
+  private samplingHandler: SamplingHandler | null = null;
 
   private client: Client;
   private transport: MCPTransport;
 
-  constructor(client: Client, transport: MCPTransport) {
+  constructor(
+    client: Client,
+    transport: MCPTransport,
+    options: { samplingEnabled?: boolean } = {}
+  ) {
     this.client = client;
     this.transport = transport;
+
     this.server = new Server(
       {
         name: 'MCP-Discord',
@@ -54,12 +60,18 @@ export class DiscordMCPServer {
       {
         capabilities: {
           tools: {},
+          ...(options.samplingEnabled && { sampling: {} }),
         },
       }
     );
 
     this.toolContext = createToolContext(client);
     this.setupHandlers();
+
+    // Initialize sampling handler if enabled
+    if (options.samplingEnabled) {
+      this.samplingHandler = new SamplingHandler(client, this.server);
+    }
   }
 
   private setupHandlers() {
@@ -197,29 +209,9 @@ export class DiscordMCPServer {
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Invalid arguments: ${error.errors
-                  .map((e: z.ZodIssue) => `${e.path.join('.')}: ${e.message}`)
-                  .join(', ')}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        return {
-          content: [
-            { type: 'text', text: `Error executing tool: ${errorMessage}` },
-          ],
-          isError: true,
-        };
+      } catch (err) {
+        error(`Error in tool handler: ${String(err)}`);
+        throw err;
       }
     });
   }
@@ -251,16 +243,31 @@ export class DiscordMCPServer {
       this.logClientState('periodic check');
     }, 10_000);
 
+    // Enable sampling if handler is available
+    if (this.samplingHandler) {
+      this.samplingHandler.enable();
+    }
+
     await this.transport.start(this.server);
+
+    if (this.samplingHandler) {
+      info('MCP Discord server started with sampling enabled');
+    } else {
+      info('MCP Discord server started (sampling disabled)');
+    }
   }
 
   async stop() {
-    // Clear the periodic check interval
     if (this.clientStatusInterval) {
       clearInterval(this.clientStatusInterval);
-      this.clientStatusInterval = null;
+    }
+
+    // Disable sampling if handler is available
+    if (this.samplingHandler) {
+      this.samplingHandler.disable();
     }
 
     await this.transport.stop();
+    info('MCP Discord server stopped');
   }
 }

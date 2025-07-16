@@ -1,76 +1,28 @@
 #!/usr/bin/env node
 import { Client, GatewayIntentBits } from 'discord.js';
-import { config as dotenvConfig } from 'dotenv';
+import { env } from './config.js';
 import { error, info } from './logger.js';
 import { DiscordMCPServer } from './server.js';
 import { StdioTransport, StreamableHttpTransport } from './transport.js';
 
-// Load environment variables from .env file if exists
-dotenvConfig();
-
-// Configuration with priority for command line arguments
-const config = {
-  DISCORD_TOKEN: (() => {
-    try {
-      // First try to get from command line arguments
-      const configIndex = process.argv.indexOf('--config');
-      if (configIndex !== -1 && configIndex + 1 < process.argv.length) {
-        const configArg = process.argv[configIndex + 1];
-        // Handle both string and object formats
-        if (typeof configArg === 'string') {
-          try {
-            const parsedConfig = JSON.parse(configArg);
-            return parsedConfig.DISCORD_TOKEN;
-          } catch {
-            // If not valid JSON, try using the string directly
-            return configArg;
-          }
-        }
-      }
-      // Then try environment variable
-      return process.env.DISCORD_TOKEN;
-    } catch (err) {
-      error(`Error parsing config: ${String(err)}`);
-      return null;
-    }
-  })(),
-  TRANSPORT: (() => {
-    // Check for transport type argument
-    const transportIndex = process.argv.indexOf('--transport');
-    if (transportIndex !== -1 && transportIndex + 1 < process.argv.length) {
-      return process.argv[transportIndex + 1];
-    }
-    // Default to stdio
-    return 'stdio';
-  })(),
-  HTTP_PORT: (() => {
-    // Check for port argument
-    const portIndex = process.argv.indexOf('--port');
-    if (portIndex !== -1 && portIndex + 1 < process.argv.length) {
-      return Number.parseInt(process.argv[portIndex + 1], 10);
-    }
-    // Default port for MCP
-    return 8080;
-  })(),
-};
-
-// Create Discord client
+// Create Discord client with additional intents for sampling
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    ...(env.SAMPLING_ENABLED ? [GatewayIntentBits.DirectMessages] : []),
   ],
 });
 
 // Save token to client for login handler
-if (config.DISCORD_TOKEN) {
-  client.token = config.DISCORD_TOKEN;
+if (env.DISCORD_TOKEN) {
+  client.token = env.DISCORD_TOKEN;
 }
 
 // Auto-login on startup if token is available
 const autoLogin = async () => {
-  const token = config.DISCORD_TOKEN;
+  const token = env.DISCORD_TOKEN;
   if (token) {
     try {
       await client.login(token);
@@ -97,17 +49,15 @@ const autoLogin = async () => {
 
 // Initialize transport based on configuration
 const initializeTransport = () => {
-  switch (config.TRANSPORT.toLowerCase()) {
+  switch (env.TRANSPORT.toLowerCase()) {
     case 'http':
-      info(`Initializing HTTP transport on 0.0.0.0:${config.HTTP_PORT}`);
-      return new StreamableHttpTransport(config.HTTP_PORT);
+      info(`Initializing HTTP transport on 0.0.0.0:${env.HTTP_PORT}`);
+      return new StreamableHttpTransport(env.HTTP_PORT);
     case 'stdio':
       info('Initializing stdio transport');
       return new StdioTransport();
     default:
-      error(
-        `Unknown transport type: ${config.TRANSPORT}. Falling back to stdio.`
-      );
+      error(`Unknown transport type: ${env.TRANSPORT}. Falling back to stdio.`);
       return new StdioTransport();
   }
 };
@@ -117,14 +67,20 @@ await autoLogin();
 
 // Create and start MCP server with selected transport
 const transport = initializeTransport();
-const mcpServer = new DiscordMCPServer(client, transport);
+const mcpServer = new DiscordMCPServer(client, transport, {
+  samplingEnabled: env.SAMPLING_ENABLED,
+});
 
 try {
   await mcpServer.start();
   info('MCP server started successfully');
 
+  if (env.SAMPLING_ENABLED) {
+    info('Sampling enabled');
+  }
+
   // Keep the Node.js process running
-  if (config.TRANSPORT.toLowerCase() === 'http') {
+  if (env.TRANSPORT.toLowerCase() === 'http') {
     // Send a heartbeat every 30 seconds to keep the process alive
     setInterval(() => {
       info('MCP server is running');

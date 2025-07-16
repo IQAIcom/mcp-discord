@@ -96,38 +96,63 @@ npm run build
 
 ## Configuration
 
-A Discord bot token is required for proper operation. The server supports two transport methods: stdio and streamable HTTP.
+All configuration is now handled via the `src/config.ts` file, which supports both environment variables and command-line arguments. The following options are available:
 
-### Transport Methods
+| Option                        | Type     | Default   | Description                                                                 |
+|-------------------------------|----------|-----------|-----------------------------------------------------------------------------|
+| `DISCORD_TOKEN`               | string   | —         | **Required.** Discord bot token.                                            |
+| `SAMPLING_ENABLED`            | boolean  | `true`    | Enables bi-directional message sampling (see [Sampling](#sampling)).        |
+| `TRANSPORT`                   | string   | `stdio`   | Transport method: `stdio` (default) or `http`.                              |
+| `HTTP_PORT`                   | number   | `8080`    | Port for HTTP transport (only if `TRANSPORT` is `http`).                    |
+| `DEFAULT_RATE_LIMIT_SECONDS`  | number   | `2`       | Rate limit (seconds) for sampling requests per user.                        |
+| `DEFAULT_MESSAGE_CHUNK_SIZE`  | number   | `2000`    | Max message chunk size for sampling responses.                              |
 
-1. **stdio** (Default)
-   - Traditional stdio transport for basic usage
-   - Suitable for simple integrations
+You can set these options via environment variables or command-line arguments:
 
-2. **streamable HTTP**
-   - HTTP-based transport for more advanced scenarios
-   - Supports stateless operation
-   - Configurable port number
-
-### Configuration Options
-
-You can provide configuration in two ways:
-
-1. Environment variables:
+**Environment variables:**
 
 ```bash
 DISCORD_TOKEN=your_discord_bot_token
+SAMPLING_ENABLED=false
+TRANSPORT=http
+HTTP_PORT=3000
+DEFAULT_RATE_LIMIT_SECONDS=5
+DEFAULT_MESSAGE_CHUNK_SIZE=1500
 ```
 
-2. Using command line arguments:
+**Command-line arguments:**
 
 ```bash
-# For stdio transport (default)
-node build/index.js --config "your_discord_bot_token"
-
-# For streamable HTTP transport
-node build/index.js --transport http --port 3000 --config "your_discord_bot_token"
+node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500
 ```
+
+If both are provided, command-line arguments take precedence.
+
+---
+
+## Sampling
+
+The Sampling feature enables bi-directional communication between Discord and the MCP server, allowing the bot to listen to messages and respond automatically. This is controlled by the `SAMPLING_ENABLED` config option (enabled by default).
+
+**How it works:**
+
+- When enabled, the bot listens for new messages and bot mentions in Discord channels.
+- If a user sends a message, the bot can process it and respond using the MCP protocol.
+- The bot adds a 🤔 reaction when mentioned.
+- Rate limiting is enforced per user (see `DEFAULT_RATE_LIMIT_SECONDS`).
+- Long responses are split into chunks (see `DEFAULT_MESSAGE_CHUNK_SIZE`).
+
+**Disabling Sampling:**
+
+- Set `SAMPLING_ENABLED=false` in your environment or omit the `--sampling` flag.
+- The bot will not listen to or respond to messages automatically.
+
+**Advanced options:**
+
+- `DEFAULT_RATE_LIMIT_SECONDS`: Minimum seconds between sampling responses per user.
+- `DEFAULT_MESSAGE_CHUNK_SIZE`: Maximum size of each message chunk sent in response.
+
+---
 
 ## Tools Documentation
 
