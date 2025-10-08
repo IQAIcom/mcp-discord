@@ -27,70 +27,120 @@ const envSchema = z.object({
     .optional()
     .default(2000)
     .describe('chunk size for sampling'),
+  RESPOND_TO_MENTIONS_ONLY: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Only respond to messages that mention the bot'),
+  BLOCK_DMS: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Block direct messages to the bot'),
+  BLOCKED_GUILDS: z
+    .string()
+    .optional()
+    .default('')
+    .describe('Comma-separated list of guild IDs to block'),
+  BANNED_USERS: z
+    .string()
+    .optional()
+    .default('')
+    .describe('Comma-separated list of user IDs to ban'),
+  REACTION_TIMEOUT_MS: z
+    .number()
+    .optional()
+    .default(10_000)
+    .describe('Timeout for reaction sampling requests in milliseconds'),
 });
 
 // Parse environment variables first
 const envVars = envSchema.parse(process.env);
 
-// Handle command line arguments with fallback to environment variables
+const getArgValue = (
+  args: string[],
+  argName: string,
+  defaultValue: string
+): string => {
+  const argIndex = args.indexOf(argName);
+  return argIndex !== -1 && argIndex + 1 < args.length
+    ? args[argIndex + 1]
+    : defaultValue;
+};
+
+const getNumberArgValue = (
+  args: string[],
+  argName: string,
+  defaultValue: number
+): number => {
+  const argIndex = args.indexOf(argName);
+  return argIndex !== -1 && argIndex + 1 < args.length
+    ? Number.parseInt(args[argIndex + 1], 10)
+    : defaultValue;
+};
+
+const getBooleanArgValue = (
+  args: string[],
+  argName: string,
+  defaultValue: boolean
+): boolean => {
+  return args.indexOf(argName) !== -1 || defaultValue;
+};
+
+const parseDiscordToken = (args: string[], defaultToken: string): string => {
+  const configIndex = args.indexOf('--config');
+  if (configIndex === -1 || configIndex + 1 >= args.length) {
+    return defaultToken;
+  }
+
+  const configArg = args[configIndex + 1];
+  try {
+    const parsedConfig = JSON.parse(configArg);
+    return parsedConfig.DISCORD_TOKEN || defaultToken;
+  } catch {
+    return configArg;
+  }
+};
+
 const getConfigFromArgs = (): z.infer<typeof envSchema> => {
   const args = process.argv;
 
-  // Check for --config argument (JSON string)
-  const configIndex = args.indexOf('--config');
-  let discordToken = envVars.DISCORD_TOKEN;
-  if (configIndex !== -1 && configIndex + 1 < args.length) {
-    const configArg = args[configIndex + 1];
-    try {
-      const parsedConfig = JSON.parse(configArg);
-      if (parsedConfig.DISCORD_TOKEN) {
-        discordToken = parsedConfig.DISCORD_TOKEN;
-      }
-    } catch {
-      // If not valid JSON, try using the string directly
-      discordToken = configArg;
-    }
-  }
-
-  // Check for --transport argument
-  const transportIndex = args.indexOf('--transport');
-  const transport =
-    transportIndex !== -1 && transportIndex + 1 < args.length
-      ? args[transportIndex + 1]
-      : envVars.TRANSPORT;
-
-  // Check for --port argument
-  const portIndex = args.indexOf('--port');
-  const httpPort =
-    portIndex !== -1 && portIndex + 1 < args.length
-      ? Number.parseInt(args[portIndex + 1], 10)
-      : envVars.HTTP_PORT;
-
-  // Check for --sampling flag
-  const samplingEnabled =
-    args.indexOf('--sampling') !== -1 || envVars.SAMPLING_ENABLED;
-
-  // Check for --rate-limit argument
-  const rateLimitIndex = args.indexOf('--rate-limit');
-  const rateLimit =
-    rateLimitIndex !== -1 && rateLimitIndex + 1 < args.length
-      ? Number.parseInt(args[rateLimitIndex + 1], 10)
-      : envVars.DEFAULT_RATE_LIMIT_SECONDS;
-
-  // Check for --message-chunk-size argument
-  const messageChunkSizeIndex = args.indexOf('--message-chunk-size');
-  const messageChunkSize =
-    messageChunkSizeIndex !== -1 && messageChunkSizeIndex + 1 < args.length
-      ? Number.parseInt(args[messageChunkSizeIndex + 1], 10)
-      : envVars.DEFAULT_MESSAGE_CHUNK_SIZE;
-
   return {
-    DISCORD_TOKEN: discordToken,
-    SAMPLING_ENABLED: samplingEnabled,
-    TRANSPORT: transport,
-    HTTP_PORT: httpPort,
-    DEFAULT_RATE_LIMIT_SECONDS: rateLimit,
-    DEFAULT_MESSAGE_CHUNK_SIZE: messageChunkSize,
+    DISCORD_TOKEN: parseDiscordToken(args, envVars.DISCORD_TOKEN),
+    SAMPLING_ENABLED: getBooleanArgValue(
+      args,
+      '--sampling',
+      envVars.SAMPLING_ENABLED
+    ),
+    TRANSPORT: getArgValue(args, '--transport', envVars.TRANSPORT),
+    HTTP_PORT: getNumberArgValue(args, '--port', envVars.HTTP_PORT),
+    DEFAULT_RATE_LIMIT_SECONDS: getNumberArgValue(
+      args,
+      '--rate-limit',
+      envVars.DEFAULT_RATE_LIMIT_SECONDS
+    ),
+    DEFAULT_MESSAGE_CHUNK_SIZE: getNumberArgValue(
+      args,
+      '--message-chunk-size',
+      envVars.DEFAULT_MESSAGE_CHUNK_SIZE
+    ),
+    RESPOND_TO_MENTIONS_ONLY: getBooleanArgValue(
+      args,
+      '--mentions-only',
+      envVars.RESPOND_TO_MENTIONS_ONLY
+    ),
+    BLOCK_DMS: getBooleanArgValue(args, '--block-dms', envVars.BLOCK_DMS),
+    BLOCKED_GUILDS: getArgValue(
+      args,
+      '--blocked-guilds',
+      envVars.BLOCKED_GUILDS
+    ),
+    BANNED_USERS: getArgValue(args, '--banned-users', envVars.BANNED_USERS),
+    REACTION_TIMEOUT_MS: getNumberArgValue(
+      args,
+      '--reaction-timeout',
+      envVars.REACTION_TIMEOUT_MS
+    ),
   };
 };
 

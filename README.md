@@ -106,6 +106,11 @@ All configuration is now handled via the `src/config.ts` file, which supports bo
 | `HTTP_PORT`                   | number   | `8080`    | Port for HTTP transport (only if `TRANSPORT` is `http`).                    |
 | `DEFAULT_RATE_LIMIT_SECONDS`  | number   | `2`       | Rate limit (seconds) for sampling requests per user.                        |
 | `DEFAULT_MESSAGE_CHUNK_SIZE`  | number   | `2000`    | Max message chunk size for sampling responses.                              |
+| `RESPOND_TO_MENTIONS_ONLY`    | boolean  | `true`    | Only respond to messages that mention the bot.                              |
+| `BLOCK_DMS`                   | boolean  | `true`    | Block direct messages to the bot.                                           |
+| `BLOCKED_GUILDS`              | string   | `""`      | Comma-separated list of guild IDs to block.                                 |
+| `BANNED_USERS`                | string   | `""`      | Comma-separated list of user IDs to ban.                                    |
+| `REACTION_TIMEOUT_MS`         | number   | `1000`    | Timeout (ms) for reaction sampling requests.                                |
 
 You can set these options via environment variables or command-line arguments:
 
@@ -118,12 +123,17 @@ TRANSPORT=http
 HTTP_PORT=3000
 DEFAULT_RATE_LIMIT_SECONDS=5
 DEFAULT_MESSAGE_CHUNK_SIZE=1500
+RESPOND_TO_MENTIONS_ONLY=true
+BLOCK_DMS=true
+BLOCKED_GUILDS="123456789,987654321"
+BANNED_USERS="111111111,222222222"
+REACTION_TIMEOUT_MS=1500
 ```
 
 **Command-line arguments:**
 
 ```bash
-node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500
+node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500 --mentions-only --block-dms --blocked-guilds "123,456" --banned-users "111,222" --reaction-timeout 1500
 ```
 
 If both are provided, command-line arguments take precedence.
@@ -138,7 +148,8 @@ The Sampling feature enables bi-directional communication between Discord and th
 
 - When enabled, the bot listens for new messages and bot mentions in Discord channels.
 - If a user sends a message, the bot can process it and respond using the MCP protocol.
-- The bot adds a 🤔 reaction when mentioned.
+- When mentioned, the bot requests an AI-generated contextual reaction emoji (with a 1-second timeout, falling back to 🤔).
+- All bot responses are sent as **replies** to the original message for better context.
 - Rate limiting is enforced per user (see `DEFAULT_RATE_LIMIT_SECONDS`).
 - Long responses are split into chunks (see `DEFAULT_MESSAGE_CHUNK_SIZE`).
 
@@ -147,10 +158,20 @@ The Sampling feature enables bi-directional communication between Discord and th
 - Set `SAMPLING_ENABLED=false` in your environment or omit the `--sampling` flag.
 - The bot will not listen to or respond to messages automatically.
 
+**Message Filtering:**
+
+Control which messages the bot responds to:
+
+- **`RESPOND_TO_MENTIONS_ONLY`** (default: `true`): Only respond when the bot is mentioned.
+- **`BLOCK_DMS`** (default: `true`): Ignore all direct messages.
+- **`BLOCKED_GUILDS`**: Comma-separated guild IDs to ignore (e.g., `"123456789,987654321"`).
+- **`BANNED_USERS`**: Comma-separated user IDs to ignore (e.g., `"111111111,222222222"`).
+
 **Advanced options:**
 
-- `DEFAULT_RATE_LIMIT_SECONDS`: Minimum seconds between sampling responses per user.
-- `DEFAULT_MESSAGE_CHUNK_SIZE`: Maximum size of each message chunk sent in response.
+- **`DEFAULT_RATE_LIMIT_SECONDS`**: Minimum seconds between sampling responses per user.
+- **`DEFAULT_MESSAGE_CHUNK_SIZE`**: Maximum size of each message chunk sent in response.
+- **`REACTION_TIMEOUT_MS`**: Timeout (milliseconds) for AI-generated reaction requests (default: 1000ms).
 
 ---
 

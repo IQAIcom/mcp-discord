@@ -12,10 +12,18 @@ export class SamplingHandler {
   private client: Client;
   private server: Server;
   private isEnabled = false;
+  private blockedGuildIds: Set<string>;
+  private bannedUserIds: Set<string>;
 
   constructor(client: Client, server: Server) {
     this.client = client;
     this.server = server;
+    this.blockedGuildIds = new Set(
+      env.BLOCKED_GUILDS.split(',').filter((id) => id.trim().length > 0)
+    );
+    this.bannedUserIds = new Set(
+      env.BANNED_USERS.split(',').filter((id) => id.trim().length > 0)
+    );
   }
 
   enable() {
@@ -51,8 +59,35 @@ export class SamplingHandler {
     this.client.off(Events.MessageCreate, this.handleBotMention);
   }
 
-  private handleMessage = async (message: Message) => {
+  private shouldFilterMessage(message: Message): boolean {
     if (message.author.bot) {
+      return true;
+    }
+
+    if (this.bannedUserIds.has(message.author.id)) {
+      return true;
+    }
+
+    if (env.BLOCK_DMS && !message.guild) {
+      return true;
+    }
+
+    if (message.guild && this.blockedGuildIds.has(message.guild.id)) {
+      return true;
+    }
+
+    if (
+      env.RESPOND_TO_MENTIONS_ONLY &&
+      !(this.client.user && message.mentions.has(this.client.user))
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private handleMessage = async (message: Message) => {
+    if (this.shouldFilterMessage(message)) {
       return;
     }
 
@@ -60,14 +95,14 @@ export class SamplingHandler {
   };
 
   private handleBotMention = async (message: Message) => {
-    if (message.author.bot) {
+    if (this.shouldFilterMessage(message)) {
       return;
     }
     if (!(this.client.user && message.mentions.has(this.client.user))) {
       return;
     }
 
-    await this.addThinkingReaction(message);
+    await this.addDynamicReaction(message);
   };
 
   private async handleMessageForSampling(message: Message) {
@@ -96,8 +131,8 @@ export class SamplingHandler {
     } catch (err) {
       error(`Error processing sampling request: ${String(err)}`);
       if (message.channel.isTextBased() && 'send' in message.channel) {
-        await message.channel
-          .send(
+        await message
+          .reply(
             '💥 Oops! Something went wrong. My brain.exe has stopped working.'
           )
           .catch(() => {
@@ -107,11 +142,51 @@ export class SamplingHandler {
     }
   }
 
-  private async addThinkingReaction(message: Message) {
+  private async addDynamicReaction(message: Message) {
     try {
-      await message.react('🤔');
+      const reactionPromise = this.requestReactionSampling(message);
+      const timeoutPromise = new Promise<string>((resolve) =>
+        setTimeout(() => resolve('🤔'), env.REACTION_TIMEOUT_MS)
+      );
+
+      const emoji = await Promise.race([reactionPromise, timeoutPromise]);
+      await message.react(emoji);
     } catch {
       // Ignore reaction errors
+    }
+  }
+
+  private async requestReactionSampling(message: Message): Promise<string> {
+    const template = `
+      USER MENTIONED THE BOT (REACTION EMOJI REQUEST):
+      user_name: ${message.author.username}
+      message: ${message.content}
+
+      Respond with a single emoji that would be an appropriate reaction to this message.
+      Only output the emoji character, nothing else.
+    `.trim();
+
+    try {
+      const result = await this.server.request(
+        {
+          method: 'sampling/createMessage',
+          params: {
+            messages: [
+              {
+                role: 'user',
+                content: { type: 'text', text: template },
+              },
+            ],
+            maxTokens: 10,
+          },
+        },
+        z.any()
+      );
+
+      const response = result?.content?.text?.trim() || '🤔';
+      return response;
+    } catch {
+      return '🤔';
     }
   }
 
@@ -155,13 +230,19 @@ export class SamplingHandler {
       const chunks = response.match(
         new RegExp(`.{1,${env.DEFAULT_MESSAGE_CHUNK_SIZE}}`, 'g')
       ) || [response];
-      // Send chunks sequentially to maintain message order
+
+      let firstChunk = true;
       for (const chunk of chunks) {
-        // biome-ignore lint: Sequential sending required for Discord message order
-        await message.channel.send(chunk);
+        if (firstChunk) {
+          firstChunk = false;
+          // biome-ignore lint: Sequential sending required for Discord message order
+          await message.reply(chunk);
+        } else {
+          await message.channel.send(chunk);
+        }
       }
     } else {
-      await message.channel.send(response);
+      await message.reply(response);
     }
   }
 }
