@@ -1,12 +1,12 @@
 import { config } from 'dotenv';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 config();
 
 const envSchema = z.object({
   DISCORD_TOKEN: z.string().min(1),
   SAMPLING_ENABLED: z
-    .boolean()
+    .stringbool()
     .optional()
     .default(true)
     .describe(
@@ -28,12 +28,12 @@ const envSchema = z.object({
     .default(2000)
     .describe('chunk size for sampling'),
   RESPOND_TO_MENTIONS_ONLY: z
-    .boolean()
+    .stringbool()
     .optional()
     .default(true)
     .describe('Only respond to messages that mention the bot'),
   BLOCK_DMS: z
-    .boolean()
+    .stringbool()
     .optional()
     .default(true)
     .describe('Block direct messages to the bot'),
@@ -53,7 +53,7 @@ const envSchema = z.object({
     .default(3000)
     .describe('Timeout for reaction sampling requests in milliseconds'),
   REACTION_SAMPLING_ENABLED: z
-    .boolean()
+    .stringbool()
     .optional()
     .default(false)
     .describe('Enable AI-generated reaction sampling when bot is mentioned'),
