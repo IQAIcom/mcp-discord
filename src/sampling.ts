@@ -143,10 +143,17 @@ export class SamplingHandler {
   }
 
   private async addDynamicReaction(message: Message) {
+    if (!env.REACTION_SAMPLING_ENABLED) {
+      return;
+    }
+
     try {
       const reactionPromise = this.requestReactionSampling(message);
       const timeoutPromise = new Promise<string>((resolve) =>
-        setTimeout(() => resolve('🤔'), env.REACTION_TIMEOUT_MS)
+        setTimeout(
+          () => resolve(env.REACTION_FALLBACK_EMOJI),
+          env.REACTION_TIMEOUT_MS
+        )
       );
 
       const emoji = await Promise.race([reactionPromise, timeoutPromise]);
@@ -183,10 +190,11 @@ export class SamplingHandler {
         z.any()
       );
 
-      const response = result?.content?.text?.trim() || '🤔';
+      const response =
+        result?.content?.text?.trim() || env.REACTION_FALLBACK_EMOJI;
       return response;
     } catch {
-      return '🤔';
+      return env.REACTION_FALLBACK_EMOJI;
     }
   }
 

@@ -50,8 +50,20 @@ const envSchema = z.object({
   REACTION_TIMEOUT_MS: z
     .number()
     .optional()
-    .default(10_000)
+    .default(3000)
     .describe('Timeout for reaction sampling requests in milliseconds'),
+  REACTION_SAMPLING_ENABLED: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Enable AI-generated reaction sampling when bot is mentioned'),
+  REACTION_FALLBACK_EMOJI: z
+    .string()
+    .optional()
+    .default('🤔')
+    .describe(
+      'Fallback emoji for reactions when sampling times out or is disabled'
+    ),
 });
 
 // Parse environment variables first
@@ -140,6 +152,16 @@ const getConfigFromArgs = (): z.infer<typeof envSchema> => {
       args,
       '--reaction-timeout',
       envVars.REACTION_TIMEOUT_MS
+    ),
+    REACTION_SAMPLING_ENABLED: getBooleanArgValue(
+      args,
+      '--enable-reaction-sampling',
+      envVars.REACTION_SAMPLING_ENABLED
+    ),
+    REACTION_FALLBACK_EMOJI: getArgValue(
+      args,
+      '--reaction-fallback-emoji',
+      envVars.REACTION_FALLBACK_EMOJI
     ),
   };
 };

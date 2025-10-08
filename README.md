@@ -110,7 +110,9 @@ All configuration is now handled via the `src/config.ts` file, which supports bo
 | `BLOCK_DMS`                   | boolean  | `true`    | Block direct messages to the bot.                                           |
 | `BLOCKED_GUILDS`              | string   | `""`      | Comma-separated list of guild IDs to block.                                 |
 | `BANNED_USERS`                | string   | `""`      | Comma-separated list of user IDs to ban.                                    |
-| `REACTION_TIMEOUT_MS`         | number   | `1000`    | Timeout (ms) for reaction sampling requests.                                |
+| `REACTION_TIMEOUT_MS`         | number   | `3000`    | Timeout (ms) for reaction sampling requests.                                |
+| `REACTION_SAMPLING_ENABLED`   | boolean  | `false`   | Enable AI-generated contextual reactions when bot is mentioned.             |
+| `REACTION_FALLBACK_EMOJI`     | string   | `"🤔"`    | Fallback emoji when reaction sampling times out or fails.                   |
 
 You can set these options via environment variables or command-line arguments:
 
@@ -127,13 +129,15 @@ RESPOND_TO_MENTIONS_ONLY=true
 BLOCK_DMS=true
 BLOCKED_GUILDS="123456789,987654321"
 BANNED_USERS="111111111,222222222"
-REACTION_TIMEOUT_MS=1500
+REACTION_TIMEOUT_MS=3000
+REACTION_SAMPLING_ENABLED=true
+REACTION_FALLBACK_EMOJI="👍"
 ```
 
 **Command-line arguments:**
 
 ```bash
-node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500 --mentions-only --block-dms --blocked-guilds "123,456" --banned-users "111,222" --reaction-timeout 1500
+node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500 --mentions-only --block-dms --blocked-guilds "123,456" --banned-users "111,222" --reaction-timeout 3000 --enable-reaction-sampling --reaction-fallback-emoji "👍"
 ```
 
 If both are provided, command-line arguments take precedence.
@@ -148,7 +152,7 @@ The Sampling feature enables bi-directional communication between Discord and th
 
 - When enabled, the bot listens for new messages and bot mentions in Discord channels.
 - If a user sends a message, the bot can process it and respond using the MCP protocol.
-- When mentioned, the bot requests an AI-generated contextual reaction emoji (with a 1-second timeout, falling back to 🤔).
+- When mentioned, the bot can optionally request an AI-generated contextual reaction emoji (disabled by default, enable with `REACTION_SAMPLING_ENABLED=true`).
 - All bot responses are sent as **replies** to the original message for better context.
 - Rate limiting is enforced per user (see `DEFAULT_RATE_LIMIT_SECONDS`).
 - Long responses are split into chunks (see `DEFAULT_MESSAGE_CHUNK_SIZE`).
@@ -167,11 +171,16 @@ Control which messages the bot responds to:
 - **`BLOCKED_GUILDS`**: Comma-separated guild IDs to ignore (e.g., `"123456789,987654321"`).
 - **`BANNED_USERS`**: Comma-separated user IDs to ignore (e.g., `"111111111,222222222"`).
 
+**Reaction Sampling:**
+
+- **`REACTION_SAMPLING_ENABLED`** (default: `false`): Enable AI-generated contextual reactions when bot is mentioned. When disabled, no reaction is added.
+- **`REACTION_TIMEOUT_MS`** (default: `3000`): Timeout (milliseconds) for AI-generated reaction requests.
+- **`REACTION_FALLBACK_EMOJI`** (default: `"🤔"`): Emoji to use when reaction sampling times out or fails.
+
 **Advanced options:**
 
 - **`DEFAULT_RATE_LIMIT_SECONDS`**: Minimum seconds between sampling responses per user.
 - **`DEFAULT_MESSAGE_CHUNK_SIZE`**: Maximum size of each message chunk sent in response.
-- **`REACTION_TIMEOUT_MS`**: Timeout (milliseconds) for AI-generated reaction requests (default: 1000ms).
 
 ---
 

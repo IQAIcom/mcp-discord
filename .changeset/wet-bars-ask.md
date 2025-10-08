@@ -4,12 +4,14 @@
 
 Enhanced sampling with dynamic reactions, message filtering, and improved UX:
 
-- **Dynamic AI-Generated Reactions**: Bot now requests contextual emoji reactions from AI when mentioned (1-second timeout, falls back to 🤔)
+- **Optional AI-Generated Reactions**: Bot can optionally request contextual emoji reactions from AI when mentioned (disabled by default, opt-in via `REACTION_SAMPLING_ENABLED`)
+  - `REACTION_SAMPLING_ENABLED` (default: false) - Enable AI-generated contextual reactions (must be manually enabled). When disabled, no reaction is added.
+  - `REACTION_TIMEOUT_MS` (default: 3000) - Configurable timeout for reaction sampling requests
+  - `REACTION_FALLBACK_EMOJI` (default: "🤔") - Customizable fallback emoji when sampling times out or fails
 - **Message Replies**: All bot responses now use Discord's reply feature instead of direct channel sends for better context and conversation threading
 - **Advanced Message Filtering**: New configuration options to control bot behavior:
   - `RESPOND_TO_MENTIONS_ONLY` (default: true) - Only respond when bot is mentioned
   - `BLOCK_DMS` (default: true) - Block all direct messages
   - `BLOCKED_GUILDS` - Comma-separated list of guild IDs to ignore
   - `BANNED_USERS` - Comma-separated list of user IDs to ban
-  - `REACTION_TIMEOUT_MS` (default: 1000) - Configurable timeout for reaction sampling
 - **Code Quality**: Refactored config parsing to reduce complexity and improve maintainability
