@@ -187,7 +187,10 @@ export class SamplingHandler {
             maxTokens: 10,
           },
         },
-        z.any()
+        z.any(),
+        {
+          timeout: env.SAMPLING_REACTION_TIMEOUT,
+        }
       );
 
       const response =
@@ -225,7 +228,8 @@ export class SamplingHandler {
           maxTokens: 200,
         },
       },
-      z.any()
+      z.any(),
+      { timeout: env.SAMPLING_DEFAULT_TIMEOUT }
     );
   }
 

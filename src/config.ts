@@ -32,6 +32,14 @@ const envSchema = z.object({
     .optional()
     .default(true)
     .describe('Only respond to messages that mention the bot'),
+  SAMPLING_DEFAULT_TIMEOUT: z
+    .number()
+    .optional()
+    .describe('A timeout (in milliseconds) for this request'),
+  SAMPLING_REACTION_TIMEOUT: z
+    .number()
+    .optional()
+    .describe('A timeout for sending reactions to discord'),
   BLOCK_DMS: z
     .stringbool()
     .optional()
