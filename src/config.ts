@@ -17,12 +17,12 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? Number.parseInt(val, 10) : 8080)),
-  DEFAULT_RATE_LIMIT_SECONDS: z
+  DEFAULT_RATE_LIMIT_SECONDS: z.coerce
     .number()
     .optional()
     .default(2)
     .describe('used in sampling, when sampling is enabled'),
-  DEFAULT_MESSAGE_CHUNK_SIZE: z
+  DEFAULT_MESSAGE_CHUNK_SIZE: z.coerce
     .number()
     .optional()
     .default(2000)
@@ -32,11 +32,11 @@ const envSchema = z.object({
     .optional()
     .default(true)
     .describe('Only respond to messages that mention the bot'),
-  SAMPLING_DEFAULT_TIMEOUT: z
+  SAMPLING_DEFAULT_TIMEOUT: z.coerce
     .number()
     .optional()
     .describe('A timeout (in milliseconds) for this request'),
-  SAMPLING_REACTION_TIMEOUT: z
+  SAMPLING_REACTION_TIMEOUT: z.coerce
     .number()
     .optional()
     .describe('A timeout for sending reactions to discord'),
@@ -55,7 +55,7 @@ const envSchema = z.object({
     .optional()
     .default('')
     .describe('Comma-separated list of user IDs to ban'),
-  REACTION_TIMEOUT_MS: z
+  REACTION_TIMEOUT_MS: z.coerce
     .number()
     .optional()
     .default(3000)

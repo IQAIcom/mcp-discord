@@ -107,6 +107,8 @@ All configuration is now handled via the `src/config.ts` file, which supports bo
 | `DEFAULT_RATE_LIMIT_SECONDS`  | number   | `2`       | Rate limit (seconds) for sampling requests per user.                        |
 | `DEFAULT_MESSAGE_CHUNK_SIZE`  | number   | `2000`    | Max message chunk size for sampling responses.                              |
 | `RESPOND_TO_MENTIONS_ONLY`    | boolean  | `true`    | Only respond to messages that mention the bot.                              |
+| `SAMPLING_DEFAULT_TIMEOUT`    | number   | —         | Timeout (milliseconds) for sampling requests.                               |
+| `SAMPLING_REACTION_TIMEOUT`   | number   | —         | Timeout (milliseconds) for sending reactions to Discord.                    |
 | `BLOCK_DMS`                   | boolean  | `true`    | Block direct messages to the bot.                                           |
 | `BLOCKED_GUILDS`              | string   | `""`      | Comma-separated list of guild IDs to block.                                 |
 | `BANNED_USERS`                | string   | `""`      | Comma-separated list of user IDs to ban.                                    |
@@ -126,6 +128,8 @@ HTTP_PORT=3000
 DEFAULT_RATE_LIMIT_SECONDS=5
 DEFAULT_MESSAGE_CHUNK_SIZE=1500
 RESPOND_TO_MENTIONS_ONLY=true
+SAMPLING_DEFAULT_TIMEOUT=5000
+SAMPLING_REACTION_TIMEOUT=3000
 BLOCK_DMS=true
 BLOCKED_GUILDS="123456789,987654321"
 BANNED_USERS="111111111,222222222"
@@ -137,7 +141,7 @@ REACTION_FALLBACK_EMOJI="👍"
 **Command-line arguments:**
 
 ```bash
-node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500 --mentions-only --block-dms --blocked-guilds "123,456" --banned-users "111,222" --reaction-timeout 3000 --enable-reaction-sampling --reaction-fallback-emoji "👍"
+node build/index.js --config "your_discord_bot_token" --sampling --transport http --port 3000 --rate-limit 5 --message-chunk-size 1500 --mentions-only --sampling-default-timeout 5000 --sampling-reaction-timeout 3000 --block-dms --blocked-guilds "123,456" --banned-users "111,222" --reaction-timeout 3000 --enable-reaction-sampling --reaction-fallback-emoji "👍"
 ```
 
 If both are provided, command-line arguments take precedence.
