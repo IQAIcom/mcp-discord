@@ -1,5 +1,11 @@
 # @iqai/mcp-discord
 
+## 0.0.6
+
+### Patch Changes
+
+- c3e2d76: Adds coerce to convert string to number for env vars
+
 ## 0.0.5
 
 ### Patch Changes
