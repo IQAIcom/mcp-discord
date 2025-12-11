@@ -1,5 +1,11 @@
 # @iqai/mcp-discord
 
+## 0.0.5
+
+### Patch Changes
+
+- 463321c: Adds timeout setting in env for sampling messages
+
 ## 0.0.4
 
 ### Patch Changes

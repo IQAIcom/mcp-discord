@@ -1,6 +1,6 @@
 {
   "name": "@iqai/mcp-discord",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Model Context Protocol (MCP) server for Discord integration, allowing Claude and other MCP clients to interact with Discord",
   "main": "dist/index.js",
   "bin": {
