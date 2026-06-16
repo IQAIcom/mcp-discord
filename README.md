@@ -33,7 +33,7 @@ npx @iqai/mcp-discord --config ${DISCORD_TOKEN}
 ### Build from Source
 
 ```bash
-git clone https://github.com/IQAIcom/mcp-discord.git
+git clone https://github.com/IQOfficial/mcp-discord.git
 cd mcp-discord
 pnpm install
 pnpm run build

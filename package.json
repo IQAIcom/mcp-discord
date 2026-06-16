@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IQAICOM/mcp-discord.git"
+    "url": "git+https://github.com/IQOfficial/mcp-discord.git"
   },
   "bugs": {
-    "url": "https://github.com/IQAICOM/mcp-discord/issues"
+    "url": "https://github.com/IQOfficial/mcp-discord/issues"
   },
-  "homepage": "https://github.com/IQAICOM/mcp-discord#readme",
+  "homepage": "https://github.com/IQOfficial/mcp-discord#readme",
   "engines": {
     "node": ">=18.0.0"
   },
